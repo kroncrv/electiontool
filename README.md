@@ -46,4 +46,4 @@ optional arguments:
 Licensed under the [MIT license](https://opensource.org/licenses/MIT).
 
 ## Credits
-Written by Hay Kranen for Pointer(https://www.pointer.nl).
+Written by Hay Kranen for [Pointer](https://www.pointer.nl).
