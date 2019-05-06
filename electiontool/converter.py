@@ -11,7 +11,7 @@ from pathlib import Path
 
 BUREAU_REGEX = re.compile("(.*)\(postcode: (.*)\)")
 FIELDS = [
-    "gemeente", "gemeente_id", "bureau_label", "bureau_zip",
+    "gemeente", "gemeente_id", "bureau_id", "bureau_label", "bureau_zip",
     "total_counted", "cast", "votes_ongeldig", "votes_blanco"
 ]
 
@@ -98,14 +98,15 @@ class Converter:
                     "zip" : None
                 }
             else:
-                bureau = self.parse_bureau(unit["ReportingUnitIdentifier"]["#text"])
+                bureau = self.parse_bureau(unit["ReportingUnitIdentifier"])
 
             # Some general information
             bdata = {
                 "gemeente" : gemeente,
                 "gemeente_id" : gemeente_id,
                 "bureau_label" : bureau["label"],
-                "bureau_zip" : bureau["zip"]
+                "bureau_zip" : bureau["zip"],
+                "bureau_id" : bureau["id"]
             }
 
             # Get the total votes for every party
@@ -134,16 +135,20 @@ class Converter:
         return results
 
     def parse_bureau(self, unit):
-        results = BUREAU_REGEX.findall(unit)
+        bureau_id = unit["@Id"]
+        bureau = unit["#text"]
+        results = BUREAU_REGEX.findall(bureau)
 
         if len(results) == 0:
             # Some bureaus don't have zipcodes
             return {
-                "label" : unit,
+                "id" : bureau_id,
+                "label" : bureau,
                 "zip" : None
             }
         else:
             return {
+                "id" : bureau_id,
                 "label" : results[0][0].strip(),
                 "zip" : results[0][1].strip()
             }
