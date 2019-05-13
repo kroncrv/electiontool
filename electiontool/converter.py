@@ -78,6 +78,7 @@ class Converter:
         # (looking at you, Terschelling), so let's create something from the
         # TotalVotes
         if "ReportingUnitVotes" not in contest:
+            logger.info(f"No ReportingUnitVotes for '{gemeente}', taking TotalVotes")
             units = [ contest["TotalVotes"] ]
         else:
             units = contest["ReportingUnitVotes"]
@@ -85,6 +86,7 @@ class Converter:
         # Some places only have *one* stembureau, in that case we're going to
         # get a dict instead of a list, so make sure that works
         if not isinstance(units, list):
+            logger.info(f"Only one stembureau for '{gemeente}'")
             units = [ units ]
 
         for unit in units:
@@ -93,7 +95,9 @@ class Converter:
 
             # Get label and zipcode for bureau
             if "ReportingUnitIdentifier" not in unit:
+                logger.info(f"No ReportingUnitIdentifier for '{gemeente}', making something up")
                 bureau = {
+                    "id" : None,
                     "label" : "Unknown",
                     "zip" : None
                 }
