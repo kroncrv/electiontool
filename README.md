@@ -24,7 +24,7 @@ Parse one single XML file to a csv file
 
     ./electiontool.py -i terschelling.xml -o terschelling.csv
 
-Output results with votes per candidate (note that this might lead to large CSV files). A couple of columns are removed to reduce the file size.
+Output results with votes per candidate (note that this might lead to large CSV files). A couple of columns are removed to reduce the file size. **Note** that you manually need to match candidate identifiers with the names, because these are not available in the original XML files.
 
     ./electiontool.py -i data -o ps2019.csv --output-structure candidates
 
