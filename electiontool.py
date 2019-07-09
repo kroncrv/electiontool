@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 from argparse import ArgumentParser
-from electiontool.converter import Converter
+from electiontool.converter import Converter, INPUT_FORMATS, OUTPUT_STRUCTURES
 import logging
 logger = logging.getLogger(__name__)
-
-INPUT_FORMATS = ["emlxml"]
 
 def get_parser():
     parser = ArgumentParser(
@@ -12,6 +10,12 @@ def get_parser():
         Convert data from Dutch elections in EML XML files to a CSV file that
         has data per party per stembureau.
         """
+    )
+
+    parser.add_argument(
+        "--add-percentages", action = "store_true",
+        help = "Add percentages per party apart from absolute votes",
+        default = False
     )
 
     parser.add_argument("-i", "--input", type = str, required = True,
@@ -28,10 +32,10 @@ def get_parser():
         help = "Output CSV file (remember to add a CSV extension)"
     )
 
-    parser.add_argument(
-        "--add-percentages", action = "store_true",
-        help = "Add percentages per party apart from absolute votes",
-        default = False
+    parser.add_argument("-os", "--output-structure",
+        choices = OUTPUT_STRUCTURES,
+        default = "parties",
+        help = "Structure of the output file, per party (default) or per candidate"
     )
 
     parser.add_argument("-v", "--verbose", action = "store_true",
@@ -52,7 +56,8 @@ def main(args):
         input_path = args.input,
         input_format = args.input_format,
         output_path = args.output,
-        add_percentages = args.add_percentages
+        add_percentages = args.add_percentages,
+        output_structure = args.output_structure
     )
 
 if __name__ == "__main__":

@@ -10,8 +10,15 @@ from dpath import util
 from pathlib import Path
 
 BUREAU_REGEX = re.compile("(.*)\(postcode: (.*)\)")
-FIELDS = [
+COMMON_FIELDS = [
     "gemeente", "gemeente_id", "bureau_id", "bureau_label", "bureau_zip",
+]
+CANDIDATE_FIELDS = COMMON_FIELDS + [
+    "count_type", "party", "candidate_id", "count"
+]
+INPUT_FORMATS = ["emlxml"]
+OUTPUT_STRUCTURES = ["parties", "candidates"]
+PARTIES_FIELDS = COMMON_FIELDS + [
     "total_counted", "cast", "votes_ongeldig", "votes_blanco"
 ]
 
@@ -32,11 +39,31 @@ def yield_path(path, extension = None):
         yield path
 
 class Converter:
-    def __init__(self, input_path, input_format, output_path, add_percentages):
-        self.fields = FIELDS.copy()
+    def __init__(self,
+        input_path,
+        input_format,
+        output_path,
+        add_percentages,
+        output_structure
+    ):
+        if input_format not in INPUT_FORMATS:
+            raise Exception(f"Invalid input format: {input_format}")
+
+        self.input_format = input_format
+
+        if output_structure not in OUTPUT_STRUCTURES:
+            raise Exception(f"Invalid output structure: {output_structure}")
+
+        self.output_structure = output_structure
+
+        if self.output_structure == "parties":
+            self.fields = PARTIES_FIELDS.copy()
+        elif self.output_structure == "candidates":
+            self.fields = CANDIDATE_FIELDS.copy()
+
         self.input_path = input_path
 
-        if input_format == "emlxml":
+        if self.input_format == "emlxml":
             results = self.parse_xmls()
 
         if add_percentages:
@@ -113,30 +140,80 @@ class Converter:
                 "bureau_id" : bureau["id"]
             }
 
-            # Get the total votes for every party
-            for selection in unit["Selection"]:
-                if "AffiliationIdentifier" in selection:
-                    name = selection["AffiliationIdentifier"]["RegisteredName"]
-                    votes = int(selection["ValidVotes"])
-
-                    if name not in self.fields:
-                        self.fields.append(name)
-
-                    bdata[name] = votes
-
-            # Also get some stats on other things
-            bdata["cast"] = int(unit["Cast"])
-            bdata["total_counted"] = int(unit["TotalCounted"])
-
-            # Rejected votes with reasons
-            for rejected in unit["RejectedVotes"]:
-                code = "votes_" + rejected["@ReasonCode"]
-                count = int(rejected["#text"])
-                bdata[code] = count
-
-            results.append(bdata)
+            if self.output_structure == "parties":
+                # Parties always return *one* dict
+                results += [ self.parse_as_party(bdata, unit) ]
+            elif self.output_structure == "candidates":
+                # Candidates always returns a *list* of dicts
+                results += self.parse_as_candidate(bdata, unit)
 
         return results
+
+    def parse_as_candidate(self, bdata, unit):
+        results = []
+
+        # Get the total votes for every party
+        party = None
+
+        for selection in unit["Selection"]:
+            new_b = bdata.copy()
+
+            if "AffiliationIdentifier" in selection:
+                party = selection["AffiliationIdentifier"]["RegisteredName"]
+
+            if "Candidate" in selection:
+                candidate_id = selection["Candidate"]["CandidateIdentifier"]["@Id"]
+                new_b["party"] = party
+                new_b["candidate_id"] = candidate_id
+                new_b["count_type"] = "candidate"
+                new_b["count"] = int(selection["ValidVotes"])
+                results.append(new_b)
+
+        # Also get some stats on other things
+        new_b = bdata.copy()
+        new_b["count_type"] = "cast"
+        new_b["count"] = int(unit["Cast"])
+        results.append(new_b)
+
+        new_b = bdata.copy()
+        new_b["count_type"] = "total_counted"
+        new_b["count"] = int(unit["TotalCounted"])
+        results.append(new_b)
+
+        # Rejected votes with reasons
+        for rejected in unit["RejectedVotes"]:
+            new_b = bdata.copy()
+            code = "votes_" + rejected["@ReasonCode"]
+            count = int(rejected["#text"])
+            new_b["count_type"] = code
+            new_b["count"] = count
+            results.append(new_b)
+
+        return results
+
+    def parse_as_party(self, bdata, unit):
+        # Get the total votes for every party
+        for selection in unit["Selection"]:
+            if "AffiliationIdentifier" in selection:
+                name = selection["AffiliationIdentifier"]["RegisteredName"]
+                votes = int(selection["ValidVotes"])
+
+                if name not in self.fields:
+                    self.fields.append(name)
+
+                bdata[name] = votes
+
+        # Also get some stats on other things
+        bdata["cast"] = int(unit["Cast"])
+        bdata["total_counted"] = int(unit["TotalCounted"])
+
+        # Rejected votes with reasons
+        for rejected in unit["RejectedVotes"]:
+            code = "votes_" + rejected["@ReasonCode"]
+            count = int(rejected["#text"])
+            bdata[code] = count
+
+        return bdata
 
     def parse_bureau(self, unit):
         bureau_id = unit["@Id"]
