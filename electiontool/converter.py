@@ -1,13 +1,13 @@
-import glob
-import re
-import sys
-import xmltodict
-import logging
-logger = logging.getLogger(__name__)
-
 from dataknead import Knead
 from dpath import util
 from pathlib import Path
+import glob
+import logging
+import re
+import sys
+import xmltodict
+
+logger = logging.getLogger(__name__)
 
 BUREAU_REGEX = re.compile("(.*)\(postcode: (.*)\)")
 CANDIDATE_FIELDS = [
@@ -41,17 +41,20 @@ class Converter:
         input_path,
         input_format,
         output_path,
-        add_percentages,
-        output_structure
+        output_structure,
+        add_percentages = False,
+        add_contestname = False
     ):
-        if input_format not in INPUT_FORMATS:
-            raise Exception(f"Invalid input format: {input_format}")
+        # Validation
+        assert input_format in INPUT_FORMATS
+        assert output_structure in OUTPUT_STRUCTURES
+        assert Path(output_path).suffix == ".csv"
 
+        self.add_contestname = add_contestname
+        self.add_percentages = add_percentages
         self.input_format = input_format
-
-        if output_structure not in OUTPUT_STRUCTURES:
-            raise Exception(f"Invalid output structure: {output_structure}")
-
+        self.input_path = input_path
+        self.output_path = output_path
         self.output_structure = output_structure
 
         if self.output_structure == "parties":
@@ -59,15 +62,10 @@ class Converter:
         elif self.output_structure == "candidates":
             self.fields = CANDIDATE_FIELDS.copy()
 
-        self.input_path = input_path
+        if self.add_contestname:
+            self.fields.insert(0, "contestname")
 
-        if self.input_format == "emlxml":
-            results = self.parse_xmls()
-
-        if add_percentages:
-            results = self.add_percentages(results)
-
-        Knead(results).write(output_path, fieldnames = self.fields)
+        self.run()
 
     def add_percentages(self, rows):
         data = []
@@ -134,6 +132,10 @@ class Converter:
                 "bureau_id" : bureau["id"],
                 "bureau_zip" : bureau["zip"]
             }
+
+            # Optional field
+            if self.add_contestname:
+                bdata["contestname"] = contest["ContestIdentifier"]["ContestName"]
 
             # And these two only appear in the 'parties' structure
             if self.output_structure == "parties":
@@ -255,3 +257,12 @@ class Converter:
                 logger.info(f"Could not parse the data from <{path}>")
 
         return results
+
+    def run(self):
+        if self.input_format == "emlxml":
+            results = self.parse_xmls()
+
+        if self.add_percentages:
+            results = self.add_percentages(results)
+
+        Knead(results).write(self.output_path, fieldnames = self.fields)

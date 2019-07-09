@@ -2,6 +2,7 @@
 from argparse import ArgumentParser
 from electiontool.converter import Converter, INPUT_FORMATS, OUTPUT_STRUCTURES
 import logging
+import sys
 logger = logging.getLogger(__name__)
 
 def get_parser():
@@ -10,6 +11,11 @@ def get_parser():
         Convert data from Dutch elections in EML XML files to a CSV file that
         has data per party per stembureau.
         """
+    )
+
+    parser.add_argument("--add-contestname", action = "store_true",
+        help = "Add contestname to output",
+        default = False
     )
 
     parser.add_argument(
@@ -59,10 +65,18 @@ def main(args):
         input_format = args.input_format,
         output_path = args.output,
         add_percentages = args.add_percentages,
-        output_structure = args.output_structure
+        output_structure = args.output_structure,
+        add_contestname = args.add_contestname
     )
 
 if __name__ == "__main__":
     parser = get_parser()
     args = parser.parse_args()
-    main(args)
+
+    try:
+        main(args)
+    except AssertionError as e:
+        if args.verbose:
+            raise(e)
+
+        sys.exit("Assertion error, check your arguments (run with -v)")
