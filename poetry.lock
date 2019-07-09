@@ -1,0 +1,32 @@
+[[package]]
+category = "main"
+description = "An intuitive Python library for processing and converting text-based data formats like JSON and CSV"
+name = "dataknead"
+optional = false
+python-versions = "*"
+version = "0.2.0"
+
+[[package]]
+category = "main"
+description = "Filesystem-like pathing and searching for dictionaries"
+name = "dpath"
+optional = false
+python-versions = "*"
+version = "1.4.2"
+
+[[package]]
+category = "main"
+description = "Makes working with XML feel like you are working with JSON"
+name = "xmltodict"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+version = "0.12.0"
+
+[metadata]
+content-hash = "3a843eb48dd0541a1dfabb90b99c27ecac44689f33c5bdbba18e6262a6ac817d"
+python-versions = "^3.6"
+
+[metadata.hashes]
+dataknead = ["4c8358267efd37a09cecfca7de3ba042fac4a8db8067a10edb5d2a4a98a9f179"]
+dpath = ["0f635f49e88843a4a519aca1c599faee271730f818a81860827e7d7b4d40273f"]
+xmltodict = ["50d8c638ed7ecb88d90561beedbf720c9b4e851a9fa6c47ebd64e99d166d8a21", "8bbcb45cc982f48b2ca8fe7e7827c5d792f217ecf1792626f808bf41c3b86051"]
