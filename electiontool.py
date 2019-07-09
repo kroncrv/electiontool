@@ -35,7 +35,9 @@ def get_parser():
     parser.add_argument("-os", "--output-structure",
         choices = OUTPUT_STRUCTURES,
         default = "parties",
-        help = "Structure of the output file, per party (default) or per candidate"
+        help = "Structure of the output file, per party (default) or per \
+                candidate. Note that this will eliminate some columns to \
+                reduce file size."
     )
 
     parser.add_argument("-v", "--verbose", action = "store_true",

@@ -10,15 +10,13 @@ from dpath import util
 from pathlib import Path
 
 BUREAU_REGEX = re.compile("(.*)\(postcode: (.*)\)")
-COMMON_FIELDS = [
-    "gemeente", "gemeente_id", "bureau_id", "bureau_label", "bureau_zip",
-]
-CANDIDATE_FIELDS = COMMON_FIELDS + [
-    "count_type", "party", "candidate_id", "count"
+CANDIDATE_FIELDS = [
+    "bureau_id", "bureau_zip", "count_type", "party", "candidate_id", "count"
 ]
 INPUT_FORMATS = ["emlxml"]
 OUTPUT_STRUCTURES = ["parties", "candidates"]
-PARTIES_FIELDS = COMMON_FIELDS + [
+PARTIES_FIELDS = [
+    "gemeente", "gemeente_id", "bureau_id", "bureau_label", "bureau_zip",
     "total_counted", "cast", "votes_ongeldig", "votes_blanco"
 ]
 
@@ -131,14 +129,19 @@ class Converter:
             else:
                 bureau = self.parse_bureau(unit["ReportingUnitIdentifier"])
 
-            # Some general information
+            # These two fields are in both output structures
             bdata = {
-                "gemeente" : gemeente,
-                "gemeente_id" : gemeente_id,
-                "bureau_label" : bureau["label"],
-                "bureau_zip" : bureau["zip"],
-                "bureau_id" : bureau["id"]
+                "bureau_id" : bureau["id"],
+                "bureau_zip" : bureau["zip"]
             }
+
+            # And these two only appear in the 'parties' structure
+            if self.output_structure == "parties":
+                bdata.update({
+                    "gemeente" : gemeente,
+                    "gemeente_id" : gemeente_id,
+                    "bureau_label" : bureau["label"],
+                })
 
             if self.output_structure == "parties":
                 # Parties always return *one* dict
