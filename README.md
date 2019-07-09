@@ -24,6 +24,10 @@ Parse one single XML file to a csv file
 
     ./electiontool.py -i terschelling.xml -o terschelling.csv
 
+For some elections (like the Waterschappen), it can be useful to add the 'ContestName' to the output as well
+
+    ./electiontool.py -i data -o ps2019.csv --add-contestname
+
 Output results with votes per candidate (note that this might lead to large CSV files). A couple of columns are removed to reduce the file size. **Note** that you manually need to match candidate identifiers with the names, because these are not available in the original XML files.
 
     ./electiontool.py -i data -o ps2019.csv --output-structure candidates
@@ -35,14 +39,16 @@ Output results with votes per candidate (note that this might lead to large CSV 
 You'll get this output when running `electiontool.py -h`.
 
 ```bash
-usage: electiontool.py [-h] [--add-percentages] -i INPUT [-if {emlxml}] -o
-                       OUTPUT [-os {parties,candidates}] [-v]
+usage: electiontool.py [-h] [--add-contestname] [--add-percentages] -i INPUT
+                       [-if {emlxml}] -o OUTPUT [-os {parties,candidates}]
+                       [-v]
 
 Convert data from Dutch elections in EML XML files to a CSV file that has data
 per party per stembureau.
 
 optional arguments:
   -h, --help            show this help message and exit
+  --add-contestname     Add contestname to output
   --add-percentages     Add percentages per party apart from absolute votes
   -i INPUT, --input INPUT
                         Input file or directory
