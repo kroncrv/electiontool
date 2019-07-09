@@ -26,6 +26,8 @@ Parse one single XML file to a csv file
 
 Output results with votes per candidate (note that this might lead to large CSV files). A couple of columns are removed to reduce the file size.
 
+    ./electiontool.py -i data -o ps2019.csv --output-structure candidates
+
 ## Troubleshooting
 * Before opening an issue, try running your command with the `-v` (verbose) switch, because this will give you more debug information.
 
